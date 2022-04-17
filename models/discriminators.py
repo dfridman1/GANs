@@ -3,7 +3,7 @@ from torch import nn as nn
 
 
 class FCDiscriminator(nn.Module):
-    def __init__(self, img_dim: int, hidden_dim: int = 128):
+    def __init__(self, img_dim: int, hidden_dim: int = 256):
         super().__init__()
 
         self.disc = nn.Sequential(

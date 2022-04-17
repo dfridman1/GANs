@@ -86,17 +86,17 @@ def main():
                          criterion(fake_proba, torch.zeros_like(fake_proba)))
             disc_loss = disc_loss / 2
 
+            disc_opt.zero_grad()
             disc_loss.backward()
             disc_opt.step()
-            disc_opt.zero_grad()
 
             # train generator
             fake_proba = discriminator(fake_img_batch)
             gen_loss = criterion(fake_proba, torch.ones_like(fake_proba))
 
+            gen_opt.zero_grad()
             gen_loss.backward()
             gen_opt.step()
-            gen_opt.zero_grad()
 
             if global_step % send_every == 0:
                 stats_writer.add_scalar("generator loss", gen_loss, global_step=global_step)
