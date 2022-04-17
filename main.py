@@ -7,8 +7,8 @@ from torch.utils.tensorboard import SummaryWriter
 import torch.nn as nn
 import torchvision
 
-from models.discriminators import FCDiscriminator
-from models.generators import FCGenerator
+from models import discriminators
+from models import generators
 
 
 def normalize(x):
@@ -36,10 +36,10 @@ def main():
     args = parse_args()
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    batch_size = 32
+    batch_size = 8
     num_workers = 0
     send_every = 10
-    lr = 3e-4
+    lr = 1e-3
     epoch = 0
     global_step = 0
 
@@ -56,24 +56,28 @@ def main():
 
     z_dim = 100
     img_size = 28
-    img_dim = img_size * img_size * 1
 
-    generator = FCGenerator(z_dim=z_dim, img_dim=img_dim).to(device=device)
-    discriminator = FCDiscriminator(img_dim=img_dim).to(device=device)
+    generator = generators.DCGenerator(z_dim=z_dim, img_dim=img_size).to(device=device)
+    discriminator = discriminators.DCDiscriminator(img_dim=img_size).to(device=device)
 
     criterion = torch.nn.BCELoss()
-    gen_opt = torch.optim.Adam(params=generator.parameters(), lr=lr)
-    disc_opt = torch.optim.Adam(params=discriminator.parameters(), lr=lr)
+    gen_opt = torch.optim.Adam(params=generator.parameters(), lr=lr, betas=(0.5, 0.999))
+    disc_opt = torch.optim.Adam(params=discriminator.parameters(), lr=lr, betas=(0.5, 0.999))
 
-    dataset = torchvision.datasets.MNIST(root="data/", train=True, transform=torchvision.transforms.ToTensor())
+    dataset = torchvision.datasets.MNIST(
+        root="data/", train=True,
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(img_size),
+            torchvision.transforms.ToTensor()
+        ])
+    )
     dataloader = DataLoader(
         dataset=dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers
     )
 
     while True:
         for batch_idx, (real_img_batch, _) in enumerate(dataloader):
-            img_batch = real_img_batch.view(batch_size, -1).to(device=device)
-            img_batch = normalize(img_batch)
+            img_batch = normalize(real_img_batch).to(device=device)
 
             # train discriminator
             noise = torch.randn(size=(batch_size, z_dim)).to(device=device)
