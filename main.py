@@ -1,4 +1,5 @@
 import os
+import argparse
 import shutil
 import torch
 from torch.utils.data.dataloader import DataLoader
@@ -6,35 +7,8 @@ from torch.utils.tensorboard import SummaryWriter
 import torch.nn as nn
 import torchvision
 
-
-class Generator(nn.Module):
-    def __init__(self, z_dim: int, img_dim: int, hidden_dim: int = 256):
-        super().__init__()
-
-        self.gen = nn.Sequential(
-            nn.Linear(z_dim, hidden_dim),
-            nn.LeakyReLU(0.1),
-            nn.Linear(hidden_dim, img_dim),
-            nn.Tanh()
-        )
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return self.gen(x)
-
-
-class Discriminator(nn.Module):
-    def __init__(self, img_dim: int, hidden_dim: int = 128):
-        super().__init__()
-
-        self.disc = nn.Sequential(
-            nn.Linear(img_dim, hidden_dim),
-            nn.LeakyReLU(0.1),
-            nn.Linear(hidden_dim, 1),
-            nn.Sigmoid()
-        )
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return self.disc(x).view(-1)
+from models.discriminators import FCDiscriminator
+from models.generators import FCGenerator
 
 
 def normalize(x):
@@ -52,7 +26,15 @@ def generate(batch_size: int, z_dim: int, img_size: int, device: torch.device, g
     return generated_images
 
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--exp_name")
+    return parser.parse_args()
+
+
 def main():
+    args = parse_args()
+
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     batch_size = 32
     num_workers = 0
@@ -62,6 +44,9 @@ def main():
     global_step = 0
 
     exp_dir = "experiments"
+    if args.exp_name is not None:
+        exp_dir = f"{exp_dir}/{args.exp_name}"
+
     if os.path.exists(exp_dir):
         shutil.rmtree(exp_dir)
 
@@ -73,8 +58,8 @@ def main():
     img_size = 28
     img_dim = img_size * img_size * 1
 
-    generator = Generator(z_dim=z_dim, img_dim=img_dim).to(device=device)
-    discriminator = Discriminator(img_dim=img_dim).to(device=device)
+    generator = FCGenerator(z_dim=z_dim, img_dim=img_dim).to(device=device)
+    discriminator = FCDiscriminator(img_dim=img_dim).to(device=device)
 
     criterion = torch.nn.BCELoss()
     gen_opt = torch.optim.Adam(params=generator.parameters(), lr=lr)
