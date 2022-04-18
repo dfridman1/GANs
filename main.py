@@ -60,7 +60,7 @@ def main():
     args = parse_args()
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    batch_size = 16
+    batch_size = 128
     num_workers = 0
     send_every = 10
     show_every = 100

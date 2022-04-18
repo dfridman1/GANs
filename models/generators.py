@@ -44,11 +44,14 @@ class DCGenerator(nn.Module):
         return x
 
     @staticmethod
-    def _block(in_channels: int, out_channels: int, bias: bool, batchnorm: bool = True):
+    def _block(
+            in_channels: int, out_channels: int, bias: bool, batchnorm: bool = True,
+            kernel_size=4, stride=2, padding=1
+    ):
         layers = [
             nn.ConvTranspose2d(
                 in_channels=in_channels, out_channels=out_channels,
-                kernel_size=4, stride=2, padding=1, bias=bias
+                kernel_size=kernel_size, stride=stride, padding=padding, bias=bias
             )
         ]
         if batchnorm:
@@ -59,7 +62,7 @@ class DCGenerator(nn.Module):
     @staticmethod
     def _count_blocks(img_dim):
         cnt = 0
-        while img_dim > 0 and img_dim % 2 == 0:
+        while img_dim > 4 and img_dim % 2 == 0:
             cnt += 1
             img_dim //= 2
         return cnt
@@ -68,7 +71,6 @@ class DCGenerator(nn.Module):
 if __name__ == '__main__':
     z_dim = 100
     x = torch.randn((32, z_dim))
-    g = DCGenerator(out_channels=1, z_dim=z_dim, img_dim=28)
+    g = DCGenerator(out_channels=1, z_dim=z_dim, img_dim=32)
     y = g(x)
     print(y.shape)
-    print(y)
