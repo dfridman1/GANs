@@ -18,7 +18,7 @@ class FCGenerator(nn.Module):
 
 
 class DCGenerator(nn.Module):
-    def __init__(self, z_dim: int, img_dim: int):
+    def __init__(self, out_channels: int, z_dim: int, img_dim: int):
         super().__init__()
 
         num_blocks = self._count_blocks(img_dim)
@@ -34,7 +34,7 @@ class DCGenerator(nn.Module):
         for _ in range(num_blocks - 1):
             tconv.append(self._block(in_channels=in_channels, out_channels=in_channels // 2, bias=False))
             in_channels //= 2
-        tconv.append(self._block(in_channels=in_channels, out_channels=1, bias=True, batchnorm=False))
+        tconv.append(self._block(in_channels=in_channels, out_channels=out_channels, bias=True, batchnorm=False))
         self.tconv = nn.Sequential(*tconv)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -68,7 +68,7 @@ class DCGenerator(nn.Module):
 if __name__ == '__main__':
     z_dim = 100
     x = torch.randn((32, z_dim))
-    g = DCGenerator(z_dim=z_dim, img_dim=28)
+    g = DCGenerator(out_channels=1, z_dim=z_dim, img_dim=28)
     y = g(x)
     print(y.shape)
     print(y)

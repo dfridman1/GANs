@@ -1,3 +1,6 @@
+import ssl
+ssl._create_default_https_context = ssl._create_unverified_context
+
 import os
 import argparse
 import shutil
@@ -7,8 +10,27 @@ from torch.utils.tensorboard import SummaryWriter
 import torch.nn as nn
 import torchvision
 
+from tqdm import tqdm
+
 from models import discriminators
 from models import generators
+
+
+def get_dataset_and_in_channels(dataset_name: str, image_size: int):
+    name_to_dataset_cls = {
+        "mnist": (torchvision.datasets.MNIST, 1),
+        "cifar-10": (torchvision.datasets.CIFAR10, 3)
+    }
+    dataset_cls, in_channels = name_to_dataset_cls[dataset_name]
+    dataset = dataset_cls(
+        root="data/", train=True,
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize(image_size),
+            torchvision.transforms.ToTensor()
+        ]),
+        download=True
+    )
+    return dataset, in_channels
 
 
 def normalize(x):
@@ -20,7 +42,7 @@ def generate(batch_size: int, z_dim: int, img_size: int, device: torch.device, g
     generator.eval()
     noise = torch.randn(batch_size, z_dim).to(device=device)
     with torch.no_grad():
-        generated_images = generator(noise).view(batch_size, 1, img_size, img_size)
+        generated_images = generator(noise).view(batch_size, -1, img_size, img_size)
     if back_to_train:
         generator.train()
     return generated_images
@@ -29,6 +51,8 @@ def generate(batch_size: int, z_dim: int, img_size: int, device: torch.device, g
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--exp_name")
+    parser.add_argument("--dataset", choices=["mnist", "cifar-10"],  default="mnist")
+    parser.add_argument("--image_size", type=int, default=32)
     return parser.parse_args()
 
 
@@ -36,10 +60,11 @@ def main():
     args = parse_args()
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    batch_size = 8
+    batch_size = 16
     num_workers = 0
     send_every = 10
-    lr = 1e-3
+    show_every = 100
+    lr = 2e-4
     epoch = 0
     global_step = 0
 
@@ -55,28 +80,23 @@ def main():
     stats_writer = SummaryWriter(f"{exp_dir}/stats")
 
     z_dim = 100
-    img_size = 28
+    img_size = args.image_size
 
-    generator = generators.DCGenerator(z_dim=z_dim, img_dim=img_size).to(device=device)
-    discriminator = discriminators.DCDiscriminator(img_dim=img_size).to(device=device)
+    dataset, in_channels = get_dataset_and_in_channels(dataset_name=args.dataset, image_size=img_size)
+    dataloader = DataLoader(
+        dataset=dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers
+    )
+    num_iterations_per_epoch = len(dataset) // batch_size
+
+    generator = generators.DCGenerator(out_channels=in_channels, z_dim=z_dim, img_dim=img_size).to(device=device)
+    discriminator = discriminators.DCDiscriminator(in_channels=in_channels, img_dim=img_size).to(device=device)
 
     criterion = torch.nn.BCELoss()
     gen_opt = torch.optim.Adam(params=generator.parameters(), lr=lr, betas=(0.5, 0.999))
     disc_opt = torch.optim.Adam(params=discriminator.parameters(), lr=lr, betas=(0.5, 0.999))
 
-    dataset = torchvision.datasets.MNIST(
-        root="data/", train=True,
-        transform=torchvision.transforms.Compose([
-            torchvision.transforms.Resize(img_size),
-            torchvision.transforms.ToTensor()
-        ])
-    )
-    dataloader = DataLoader(
-        dataset=dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers
-    )
-
     while True:
-        for batch_idx, (real_img_batch, _) in enumerate(dataloader):
+        for batch_idx, (real_img_batch, _) in tqdm(enumerate(dataloader), total=num_iterations_per_epoch, leave=False):
             img_batch = normalize(real_img_batch).to(device=device)
 
             # train discriminator
@@ -107,7 +127,7 @@ def main():
                 stats_writer.add_scalar("discriminator loss", disc_loss, global_step=global_step)
                 stats_writer.add_scalar("total loss", gen_loss + disc_loss, global_step=global_step)
 
-            if batch_idx == 0:
+            if global_step % show_every == 0:
                 # visualize
                 real_images_grid = torchvision.utils.make_grid(
                     real_img_batch, normalize=True
@@ -122,7 +142,7 @@ def main():
                 generated_images = torchvision.utils.make_grid(
                     generated_images, normalize=True
                 )
-                fake_images_writer.add_image("fake images", generated_images, global_step=epoch)
+                fake_images_writer.add_image("fake images", generated_images, global_step=global_step)
             global_step += 1
         epoch += 1
 

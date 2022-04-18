@@ -18,14 +18,16 @@ class FCDiscriminator(nn.Module):
 
 
 class DCDiscriminator(nn.Module):
-    def __init__(self, img_dim: int):
+    def __init__(self, in_channels: int, img_dim: int):
         super().__init__()
+
+        assert in_channels in (1, 3)
 
         num_blocks = self._count_blocks(img_dim)
         assert num_blocks > 0
 
         conv = []
-        in_channels, out_channels = 1, 128
+        out_channels = 128
         for i in range(num_blocks - 1):
             conv.append(
                 self._block(
@@ -82,7 +84,7 @@ class DCDiscriminator(nn.Module):
 if __name__ == '__main__':
     img_dim = 66
     x = torch.randn((4, 1, img_dim, img_dim))
-    d = DCDiscriminator(img_dim=img_dim)
+    d = DCDiscriminator(in_channels=1, img_dim=img_dim)
     y = d(x)
     print(y.shape)
     print(y)
