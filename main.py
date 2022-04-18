@@ -38,13 +38,9 @@ def normalize(x):
 
 
 def generate(batch_size: int, z_dim: int, img_size: int, device: torch.device, generator: nn.Module) -> torch.Tensor:
-    back_to_train = generator.training
-    generator.eval()
     noise = torch.randn(batch_size, z_dim).to(device=device)
     with torch.no_grad():
         generated_images = generator(noise).view(batch_size, -1, img_size, img_size)
-    if back_to_train:
-        generator.train()
     return generated_images
 
 
@@ -61,7 +57,7 @@ def main():
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     batch_size = 128
-    num_workers = 0
+    num_workers = 4
     send_every = 10
     show_every = 100
     lr = 2e-4
@@ -88,8 +84,8 @@ def main():
     )
     num_iterations_per_epoch = len(dataset) // batch_size
 
-    generator = generators.DCGenerator(out_channels=in_channels, z_dim=z_dim, img_dim=img_size).to(device=device)
-    discriminator = discriminators.DCDiscriminator(in_channels=in_channels, img_dim=img_size).to(device=device)
+    generator = generators.DCGenerator(out_channels=in_channels, z_dim=z_dim, img_dim=img_size).to(device=device).train()
+    discriminator = discriminators.DCDiscriminator(in_channels=in_channels, img_dim=img_size).to(device=device).train()
 
     criterion = torch.nn.BCELoss()
     gen_opt = torch.optim.Adam(params=generator.parameters(), lr=lr, betas=(0.5, 0.999))
