@@ -59,7 +59,7 @@ def main():
     batch_size = 128
     num_workers = 4
     send_every = 10
-    show_every = 100
+    show_every = 10
     lr = 2e-4
     epoch = 0
     global_step = 0
