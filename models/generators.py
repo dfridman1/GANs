@@ -27,9 +27,13 @@ class DCGenerator(nn.Module):
         self.proj_spatial_size = img_dim // (2 ** num_blocks)
         self.proj_num_channels = 128 * (2 ** (num_blocks - 1))
 
-        self.proj = self._block(
-            in_channels=z_dim, out_channels=self.proj_num_channels, bias=False, batchnorm=True,
-            kernel_size=4, stride=1, padding=0
+        self.proj = nn.Sequential(
+            self._block(
+                in_channels=z_dim, out_channels=self.proj_num_channels, bias=False, batchnorm=True
+            ),
+            self._block(
+                in_channels=self.proj_num_channels, out_channels=self.proj_num_channels, bias=False, batchnorm=True
+            )
         )
 
         tconv = []
@@ -51,13 +55,12 @@ class DCGenerator(nn.Module):
     @staticmethod
     def _block(
             in_channels: int, out_channels: int, bias: bool, batchnorm: bool = True,
-            kernel_size=4, stride=2, padding=1
+            scale_factor: float = 2
     ):
         layers = [
-            nn.ConvTranspose2d(
-                in_channels=in_channels, out_channels=out_channels,
-                kernel_size=kernel_size, stride=stride, padding=padding, bias=bias
-            )
+            nn.Upsample(scale_factor=scale_factor),
+            nn.Conv2d(in_channels=in_channels, out_channels=out_channels,
+                      kernel_size=3, stride=1, padding=1, bias=bias)
         ]
         if batchnorm:
             layers.append(nn.BatchNorm2d(out_channels))
