@@ -27,7 +27,10 @@ class DCGenerator(nn.Module):
         self.proj_spatial_size = img_dim // (2 ** num_blocks)
         self.proj_num_channels = 128 * (2 ** (num_blocks - 1))
 
-        self.proj = nn.Linear(z_dim, self.proj_spatial_size * self.proj_spatial_size * self.proj_num_channels)
+        self.proj = self._block(
+            in_channels=z_dim, out_channels=self.proj_num_channels, bias=False, batchnorm=True,
+            kernel_size=4, stride=1, padding=0
+        )
 
         tconv = []
         in_channels = self.proj_num_channels
@@ -38,7 +41,9 @@ class DCGenerator(nn.Module):
         self.tconv = nn.Sequential(*tconv)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x = self.proj(x).view(-1, self.proj_num_channels, self.proj_spatial_size, self.proj_spatial_size)
+        batch_size, z_dim = x.shape
+        x = x.view(batch_size, z_dim, 1, 1)
+        x = self.proj(x)
         x = self.tconv(x)
         x = torch.tanh(x)
         return x
