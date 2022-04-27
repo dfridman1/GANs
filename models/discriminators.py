@@ -1,23 +1,18 @@
 import torch
+from abc import abstractmethod
 from torch import nn as nn
 
-
-class FCDiscriminator(nn.Module):
-    def __init__(self, img_dim: int, hidden_dim: int = 256):
-        super().__init__()
-
-        self.disc = nn.Sequential(
-            nn.Linear(img_dim, hidden_dim),
-            nn.LeakyReLU(0.1),
-            nn.Linear(hidden_dim, 1),
-            nn.Sigmoid()
-        )
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return self.disc(x).view(-1)
+from train_config import TrainConfig
 
 
-class DCDiscriminator(nn.Module):
+class BaseDiscriminator(nn.Module):
+    @classmethod
+    @abstractmethod
+    def from_train_config(cls, train_config: TrainConfig):
+        raise NotImplemented
+
+
+class DCDiscriminator(BaseDiscriminator):
     def __init__(self, in_channels: int, img_dim: int):
         super().__init__()
 
@@ -79,6 +74,10 @@ class DCDiscriminator(nn.Module):
             cnt += 1
             img_dim //= 2
         return cnt
+
+    @classmethod
+    def from_train_config(cls, train_config: TrainConfig):
+        return cls(in_channels=train_config.in_channels, img_dim=train_config.image_size)
 
 
 if __name__ == '__main__':

@@ -52,8 +52,8 @@ def main():
         in_channels=in_channels
     )
 
-    generator = generators.DCGenerator(out_channels=in_channels, z_dim=config.z_dim, img_dim=config.image_size)
-    discriminator = discriminators.DCDiscriminator(in_channels=in_channels, img_dim=config.image_size)
+    generator = generators.DCGenerator.from_train_config(config)
+    discriminator = discriminators.DCDiscriminator.from_train_config(config)
 
     train(
         dataset=dataset, train_config=config, generator=generator, discriminator=discriminator
