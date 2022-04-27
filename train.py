@@ -1,5 +1,6 @@
 import os
 import shutil
+import numpy as np
 import torch
 import torchvision
 from torch import nn as nn
@@ -7,6 +8,7 @@ from torch.utils.tensorboard import SummaryWriter
 from torch.utils.data import Dataset, DataLoader
 from tqdm import tqdm
 
+import helpers
 from train_config import TrainConfig
 
 
@@ -35,12 +37,29 @@ def train(dataset: Dataset, train_config: TrainConfig,
     disc_opt = torch.optim.Adam(params=discriminator.parameters(), lr=train_config.lr, betas=(0.5, 0.999))
 
     while True:
-        for batch_idx, (real_img_batch, _) in tqdm(enumerate(dataloader), total=num_iterations_per_epoch, leave=False):
-            img_batch = normalize(real_img_batch).to(device=train_config.device)
+        for batch_idx, (real_img_batch, labels) in tqdm(enumerate(dataloader), total=num_iterations_per_epoch, leave=False):
+            img_batch = normalize(real_img_batch)
+            if train_config.conditional_dim > 0:
+                conditional_input = helpers.conditional_input_encoder_discriminator(
+                    labels=labels, cardinality=train_config.conditional_dim, spatial_size=train_config.image_size
+                )
+                img_batch = torch.cat([img_batch, conditional_input], dim=1)
+            img_batch = img_batch.to(device=train_config.device)
 
             # train discriminator
-            noise = torch.randn(size=(train_config.batch_size, train_config.z_dim)).to(device=train_config.device)
+            noise = torch.randn(size=(train_config.batch_size, train_config.z_dim))
+            if train_config.conditional_dim > 0:
+                conditional_input = helpers.conditional_input_encoder_generator(
+                    labels=labels, cardinality=train_config.conditional_dim
+                )
+                noise = torch.cat([noise, conditional_input], dim=1)
+            noise = noise.to(device=train_config.device)
             fake_img_batch = generator(noise)
+            if train_config.conditional_dim > 0:
+                conditional_input = helpers.conditional_input_encoder_discriminator(
+                    labels=labels, cardinality=train_config.conditional_dim, spatial_size=train_config.image_size
+                ).to(device=train_config.device)
+                fake_img_batch = torch.cat([fake_img_batch, conditional_input], dim=1)
 
             real_proba = discriminator(img_batch)
             fake_proba = discriminator(fake_img_batch.detach())
@@ -73,11 +92,7 @@ def train(dataset: Dataset, train_config: TrainConfig,
                 )
                 real_images_writer.add_image("real images", real_images_grid, global_step=epoch)
 
-                generated_images = generate(
-                    batch_size=real_img_batch.shape[0],
-                    z_dim=train_config.z_dim, img_size=train_config.image_size, device=train_config.device,
-                    generator=generator
-                )
+                generated_images = generate(train_config=train_config, generator=generator)
                 generated_images = torchvision.utils.make_grid(
                     generated_images, normalize=True
                 )
@@ -90,8 +105,17 @@ def normalize(x):
     return 2 * x - 1
 
 
-def generate(batch_size: int, z_dim: int, img_size: int, device: torch.device, generator: nn.Module) -> torch.Tensor:
-    noise = torch.randn(batch_size, z_dim).to(device=device)
+def generate(train_config: TrainConfig, generator: nn.Module) -> torch.Tensor:
+    noise = torch.randn(train_config.batch_size, train_config.z_dim)
+    if train_config.conditional_dim > 0:
+        label = np.random.randint(low=0, high=train_config.conditional_dim)
+        labels = np.asarray([label] * train_config.batch_size)
+        labels = torch.from_numpy(labels)
+        conditional_input = helpers.conditional_input_encoder_generator(
+            labels=labels, cardinality=train_config.conditional_dim
+        )
+        noise = torch.cat([noise, conditional_input], dim=1)
+    noise = noise.to(device=train_config.device)
     with torch.no_grad():
-        generated_images = generator(noise).view(batch_size, -1, img_size, img_size)
+        generated_images = generator(noise).view(train_config.batch_size, -1, train_config.image_size, train_config.image_size)
     return generated_images

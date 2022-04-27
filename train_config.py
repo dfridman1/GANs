@@ -15,6 +15,7 @@ class TrainConfig:
     show_every: int = 100
     lr: float = 2e-4
     z_dim: int = 100
+    conditional_dim: int = 10  # for MNIST and CIFAR-10
 
     def __post_init__(self):
         assert self.in_channels in (1, 3)

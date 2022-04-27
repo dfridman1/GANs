@@ -13,11 +13,14 @@ class BaseGenerator(nn.Module):
 
 
 class DCGenerator(BaseGenerator):
-    def __init__(self, out_channels: int, z_dim: int, img_dim: int):
+    def __init__(self, out_channels: int, z_dim: int, img_dim: int, conditional_dim: int = -1):
         super().__init__()
 
         num_blocks = self._count_blocks(img_dim)
         assert num_blocks > 0
+
+        if conditional_dim > 0:
+            z_dim += conditional_dim
 
         self.proj_spatial_size = img_dim // (2 ** num_blocks)
         self.proj_num_channels = 128 * (2 ** (num_blocks - 1))
@@ -72,7 +75,8 @@ class DCGenerator(BaseGenerator):
 
     @classmethod
     def from_train_config(cls, train_config: TrainConfig):
-        return cls(out_channels=train_config.in_channels, z_dim=train_config.z_dim, img_dim=train_config.image_size)
+        return cls(out_channels=train_config.in_channels, z_dim=train_config.z_dim, img_dim=train_config.image_size,
+                   conditional_dim=train_config.conditional_dim)
 
 
 if __name__ == '__main__':

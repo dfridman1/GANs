@@ -13,13 +13,16 @@ class BaseDiscriminator(nn.Module):
 
 
 class DCDiscriminator(BaseDiscriminator):
-    def __init__(self, in_channels: int, img_dim: int):
+    def __init__(self, in_channels: int, img_dim: int, conditional_dim: int = -1):
         super().__init__()
 
         assert in_channels in (1, 3)
 
         num_blocks = self._count_blocks(img_dim)
         assert num_blocks > 0
+
+        if conditional_dim > 0:
+            in_channels += conditional_dim
 
         conv = []
         out_channels = 128
@@ -77,7 +80,8 @@ class DCDiscriminator(BaseDiscriminator):
 
     @classmethod
     def from_train_config(cls, train_config: TrainConfig):
-        return cls(in_channels=train_config.in_channels, img_dim=train_config.image_size)
+        return cls(in_channels=train_config.in_channels, img_dim=train_config.image_size,
+                   conditional_dim=train_config.conditional_dim)
 
 
 if __name__ == '__main__':
