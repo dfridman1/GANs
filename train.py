@@ -47,7 +47,7 @@ def train(dataset: Dataset, train_config: TrainConfig,
             img_batch = img_batch.to(device=train_config.device)
 
             # train discriminator
-            noise = torch.randn(size=(train_config.batch_size, train_config.z_dim))
+            noise = torch.randn(size=(len(labels), train_config.z_dim))
             if train_config.conditional_dim > 0:
                 conditional_input = helpers.conditional_input_encoder_generator(
                     labels=labels, cardinality=train_config.conditional_dim
