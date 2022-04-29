@@ -106,7 +106,7 @@ class ConvBlock(nn.Module):
                       kernel_size=4, stride=2, padding=1, bias=not batchnorm)
         ]
         if batchnorm:
-            layers.append(nn.BatchNorm2d(out_channels))
+            layers.append(nn.InstanceNorm2d(out_channels))
         if dropout:
             layers.append(nn.Dropout(0.5))
         layers.append(activation)
@@ -123,7 +123,7 @@ class TransposeConvBlock(nn.Module):
         layers = [
             nn.ConvTranspose2d(in_channels=in_channels, out_channels=out_channels,
                                kernel_size=4, stride=2, padding=1, bias=False),
-            nn.BatchNorm2d(out_channels)
+            nn.InstanceNorm2d(out_channels)
         ]
         if dropout:
             layers.append(nn.Dropout(0.5))
