@@ -4,3 +4,4 @@ tensorboard
 tensorflow
 ipython
 tqdm
+jupyter
