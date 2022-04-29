@@ -49,7 +49,7 @@ class Encoder(nn.Module):
         self.conv5 = ConvBlock(in_channels=512, out_channels=512, activation=nn.LeakyReLU(0.2))
         self.conv6 = ConvBlock(in_channels=512, out_channels=512, activation=nn.LeakyReLU(0.2))
         self.conv7 = ConvBlock(in_channels=512, out_channels=512, activation=nn.LeakyReLU(0.2))
-        self.conv8 = ConvBlock(in_channels=512, out_channels=512, activation=nn.LeakyReLU(0.2))
+        self.conv8 = ConvBlock(in_channels=512, out_channels=512, activation=nn.LeakyReLU(0.2), batchnorm=False)
 
     def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor]:
         x2 = self.conv1(x)
