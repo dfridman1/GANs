@@ -36,7 +36,7 @@ def random_crop_without_padding(image1: torch.Tensor, image2: torch.Tensor, crop
 
 class Pix2PixDataset(Dataset):
     def __init__(self, root: str, split: str, transformation: torchvision.transforms.Compose, random_crop_size: int = -1):
-        assert split in ("train", "valid", "test")
+        assert split in ("train", "val", "test")
         self.transformation = transformation
         self.random_crop_size = random_crop_size
 
