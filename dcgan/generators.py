@@ -2,7 +2,7 @@ import torch
 from abc import abstractmethod
 from torch import nn as nn
 
-from train_config import TrainConfig
+from dcgan.train_config import TrainConfig
 
 
 class BaseGenerator(nn.Module):

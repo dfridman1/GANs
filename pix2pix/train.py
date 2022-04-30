@@ -6,9 +6,9 @@ from torch.utils.data import DataLoader, Dataset
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
-from dataset import Pix2PixDataset
-from models import Pix2PixGenerator, PatchNetDisciminator
-from train_config import TrainConfig
+from pix2pix.dataset import Pix2PixDataset
+from pix2pix.models import Pix2PixGenerator, PatchNetDisciminator
+from pix2pix.train_config import TrainConfig
 
 
 def generate(dataset: Dataset, generator: torch.nn.Module, batch_size: int, device: torch.device, num_batches=4):
