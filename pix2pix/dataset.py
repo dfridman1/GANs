@@ -16,11 +16,22 @@ def random_crop(image1: torch.Tensor, image2: torch.Tensor, crop_size: int):
     image = torch.zeros((2 * c, 2 * h, 2 * w), dtype=torch.float32)
     concat_image = torch.cat([image1, image2], dim=0)
     image[:, h // 2 : -h  // 2, w // 2 : -w // 2] = concat_image
-    start_y = np.random.randint(0, image.shape[1] - crop_size)
-    start_x = np.random.randint(0, image.shape[2] - crop_size)
+    start_y = np.random.randint(0, image.shape[1] - crop_size + 1)
+    start_x = np.random.randint(0, image.shape[2] - crop_size + 1)
     image = image[:, start_y:start_y + crop_size, start_x: start_x + crop_size]
-    image_1, image_2 = image[:c, :, :], image[c:, :, :]
+    image_1, image_2 = image[:c], image[c:]
     return image_1, image_2
+
+
+def random_crop_without_padding(image1: torch.Tensor, image2: torch.Tensor, crop_size: int):
+    assert image1.shape == image2.shape
+    c, h, w = image1.shape
+    concat_image = torch.cat([image1, image2], dim=0)
+    start_y = np.random.randint(0, h - crop_size + 1)
+    start_x = np.random.randint(0, w - crop_size + 1)
+    crop = concat_image[:, start_y: start_y + crop_size, start_x: start_x + crop_size]
+    image1, image2 = crop[:c], crop[c:]
+    return image1, image2
 
 
 class Pix2PixDataset(Dataset):
@@ -41,7 +52,7 @@ class Pix2PixDataset(Dataset):
         image = self.transformation(image)
         labels = self.transformation(labels)
         if self.random_crop_size > 0:
-            image, labels = random_crop(
+            image, labels = random_crop_without_padding(
                 image1=image, image2=labels, crop_size=self.random_crop_size
             )
         return image, labels
