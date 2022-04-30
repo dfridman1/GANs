@@ -14,7 +14,7 @@ class TrainConfig:
     lr: float = 2e-4
     image_size: int = 256
     device: torch.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    lam = 100  # L1 weight
+    lam: int = 100  # L1 weight
     send_every: int = 10
     show_every: int = 100
 
