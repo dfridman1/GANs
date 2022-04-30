@@ -34,11 +34,28 @@ def random_crop_without_padding(image1: torch.Tensor, image2: torch.Tensor, crop
     return image1, image2
 
 
+def horizontal_flip(image: torch.Tensor, p: float = 0.5):
+    if np.random.uniform(0, 1) < p:
+        image = torch.fliplr(image)
+    return image
+
+
+def augment(image1: torch.Tensor, image2: torch.Tensor):
+    assert image1.shape == image2.shape
+    c = image1.shape[0]
+    concat_image = torch.cat([image1, image2], dim=0)
+    concat_image = horizontal_flip(concat_image)
+    image1, image2 = concat_image[:c], concat_image[c:]
+    return image1, image2
+
+
 class Pix2PixDataset(Dataset):
-    def __init__(self, root: str, split: str, transformation: torchvision.transforms.Compose, random_crop_size: int = -1):
+    def __init__(self, root: str, split: str, transformation: torchvision.transforms.Compose,
+                 random_crop_size: int = -1, augment: bool = False):
         assert split in ("train", "val", "test")
         self.transformation = transformation
         self.random_crop_size = random_crop_size
+        self.augment = augment
 
         self._data = self._load_data(root, split)
 
@@ -55,6 +72,8 @@ class Pix2PixDataset(Dataset):
             image, labels = random_crop_without_padding(
                 image1=image, image2=labels, crop_size=self.random_crop_size
             )
+        if self.augment:
+            image, labels = augment(image, labels)
         return image, labels
 
     def _load_data(self, root: str, split: str):

@@ -46,7 +46,8 @@ def train(train_config: TrainConfig):
             torchvision.transforms.Resize(286),
             torchvision.transforms.ToTensor()
         ]),
-        random_crop_size=train_config.image_size
+        random_crop_size=train_config.image_size,
+        augment=True
     )
     test_dataset = Pix2PixDataset(
         root=train_config.data_dirpath, split="val",
