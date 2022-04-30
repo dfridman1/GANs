@@ -16,3 +16,4 @@ class TrainConfig:
     send_every: int = 10
     show_every: int = 100
     lam: float = 10  # weight of cyclic loss
+    identity_lam: float = 0.5  # weight of identity loss

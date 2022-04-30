@@ -121,8 +121,15 @@ def train(train_config: TrainConfig):
             recycled_b = g_a(generated_a)
             g_b_cycle_loss = train_config.lam * l1_criterion(recycled_b, real_b)
 
+            # identity loss (for regularization purposes)
+            identity_a = g_a(real_a)
+            identity_b = g_b(real_b)
+            identity_loss_a = train_config.identity_lam * l1_criterion(identity_a, real_a)
+            identity_loss_b = train_config.identity_lam * l1_criterion(identity_b, real_b)
+
             g_loss = (g_a_gan_loss + g_b_gan_loss +
-                      g_a_cycle_loss + g_b_cycle_loss)
+                      g_a_cycle_loss + g_b_cycle_loss +
+                      identity_loss_a + identity_loss_b)
 
             g_a_opt.zero_grad()
             g_b_opt.zero_grad()
