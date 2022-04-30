@@ -25,7 +25,7 @@ class PatchNetDisciminator(nn.Module):
         self.conv3 = ConvBlock(128, 256, activation=nn.LeakyReLU(0.2), batchnorm=True, dropout=False)
         self.conv4 = ConvBlock(256, 512, activation=nn.LeakyReLU(0.2), batchnorm=True, dropout=False)
         self.conv5 = nn.Sequential(
-            nn.Conv2d(512, 1, kernel_size=4, stride=2, padding=1, bias=True),
+            nn.Conv2d(512, 1, kernel_size=4, stride=2, padding=1, bias=True, padding_mode="reflect"),
             nn.Sigmoid()
         )
 
@@ -103,7 +103,8 @@ class ConvBlock(nn.Module):
 
         layers = [
             nn.Conv2d(in_channels=in_channels, out_channels=out_channels,
-                      kernel_size=4, stride=2, padding=1, bias=not batchnorm)
+                      kernel_size=4, stride=2, padding=1, bias=not batchnorm,
+                      padding_mode="reflect")
         ]
         if batchnorm:
             layers.append(nn.InstanceNorm2d(out_channels))
