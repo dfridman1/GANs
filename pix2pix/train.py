@@ -120,7 +120,6 @@ def train(train_config: TrainConfig):
                 generated_images = torch.cat([generated_images, input_images, gt_images], dim=1)
                 fake_images_writer.add_image("fake images", generated_images, global_step=global_step)
             global_step += 1
-        epoch += 1
 
 
 def main():

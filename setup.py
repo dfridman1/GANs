@@ -5,7 +5,7 @@ setup(
     name="GANs",
     version="0.0.1",
     description="GANs playground",
-    packages=find_packages(include=["dcgan", "pix2pix"]),
+    packages=find_packages(include=["dcgan", "pix2pix", "cyclegan"]),
     install_requires=[
         "torch",
         "torchvision",
