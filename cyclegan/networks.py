@@ -10,7 +10,7 @@ class Discriminator(PatchNetDisciminator):
 
 
 class Generator(nn.Module):
-    def __init__(self, in_channels: int, num_residuals: int = 6):
+    def __init__(self, in_channels: int, num_residuals: int = 9):
         super().__init__()
 
         assert in_channels in (1, 3)
