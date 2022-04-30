@@ -1,4 +1,6 @@
 import os
+
+import numpy as np
 import torchvision
 from torch.utils.data import Dataset
 from PIL import Image
@@ -21,10 +23,15 @@ class ImageDataset(Dataset):
     def __len__(self):
         return len(self.images)
 
-    @staticmethod
-    def _load_images(root: str):
+    def _load_images(self, root: str):
         filepaths = glob(os.path.join(root, "*"))
         images = []
         for f in tqdm(filepaths, desc="loading images"):
-            images.append(Image.open(f))
+            image = Image.open(f)
+            if self._validate(image):
+                images.append(image)
         return images
+
+    def _validate(self, image: Image) -> bool:
+        image_array = np.asarray(image)
+        return image_array.ndim == 3 and image_array.shape[-1] == 3
