@@ -66,7 +66,7 @@ def train(train_config: TrainConfig):
     generator = Pix2PixGenerator(in_channels=train_config.in_channels).to(device=train_config.device)
     discriminator = PatchNetDisciminator(in_channels=2 * train_config.in_channels).to(device=train_config.device)
 
-    bce_criterion = torch.nn.BCELoss()
+    bce_criterion = torch.nn.BCELoss() if train_config.gan_mode == "vanilla" else torch.nn.MSELoss()
     l1_criterion = torch.nn.L1Loss()
     g_opt = torch.optim.Adam(params=generator.parameters(), lr=train_config.lr, betas=(0.5, 0.999))
     d_opt = torch.optim.Adam(params=discriminator.parameters(), lr=train_config.lr, betas=(0.5, 0.999))

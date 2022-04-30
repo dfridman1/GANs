@@ -6,6 +6,7 @@ from dataclasses import dataclass
 class TrainConfig:
     experiment_dirpath: str
     data_dirpath: str
+    gan_mode: str = "lsgan"
     in_channels: int = 3
     num_epochs: int = 100
     batch_size: int = 1
@@ -16,3 +17,6 @@ class TrainConfig:
     lam = 100  # L1 weight
     send_every: int = 10
     show_every: int = 100
+
+    def __post_init__(self):
+        assert self.gan_mode in ("lsgan", "vanilla")
