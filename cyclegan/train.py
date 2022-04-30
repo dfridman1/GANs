@@ -117,12 +117,12 @@ def train(train_config: TrainConfig):
 
             # train generators (recycle loss)
             recycled_a = g_b(generated_b)
-            g_a_cycle_loss = l1_criterion(recycled_a, real_a)
+            g_a_cycle_loss = train_config.lam * l1_criterion(recycled_a, real_a)
             recycled_b = g_a(recycled_a)
-            g_b_cycle_loss = l1_criterion(recycled_b, real_b)
+            g_b_cycle_loss = train_config.lam * l1_criterion(recycled_b, real_b)
 
             g_loss = (g_a_gan_loss + g_b_gan_loss +
-                                    g_a_cycle_loss + g_b_cycle_loss)
+                      g_a_cycle_loss + g_b_cycle_loss)
 
             g_a_opt.zero_grad()
             g_b_opt.zero_grad()

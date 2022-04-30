@@ -15,3 +15,4 @@ class TrainConfig:
     image_size: int = 256
     send_every: int = 10
     show_every: int = 100
+    lam: float = 10  # weight of cyclic loss
