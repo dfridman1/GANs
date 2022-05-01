@@ -98,8 +98,10 @@ def train(train_config: TrainConfig):
     )
     num_iterations_per_epoch = len(train_dataset_a) // train_config.batch_size
 
-    g_a = networks.Generator(in_channels=train_config.in_channels, num_residuals=train_config.num_residual_blocks).to(device=train_config.device)
-    g_b = networks.Generator(in_channels=train_config.in_channels, num_residuals=train_config.num_residual_blocks).to(device=train_config.device)
+    g_a = networks.Generator.from_image_size(in_channels=train_config.in_channels,
+                                             image_size=train_config.image_size).to(device=train_config.device)
+    g_b = networks.Generator.from_image_size(in_channels=train_config.in_channels,
+                                             image_size=train_config.image_size).to(device=train_config.device)
     d_a = networks.Discriminator(in_channels=train_config.in_channels).to(device=train_config.device)
     d_b = networks.Discriminator(in_channels=train_config.in_channels).to(device=train_config.device)
 
@@ -217,7 +219,8 @@ def train(train_config: TrainConfig):
 def main():
     config = TrainConfig(
         experiment_dirpath="experiments/cyclegan-test",
-        data_dirpath="datasets/monet2photo"
+        data_dirpath="datasets/monet2photo",
+        image_size=64
     )
     train(config)
 
