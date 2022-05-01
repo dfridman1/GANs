@@ -12,6 +12,7 @@ from cyclegan.train_config import TrainConfig
 from cyclegan.helpers import sample_random_batch
 from cyclegan import networks
 from cyclegan.dataset import ImageDataset
+from cyclegan.image_pool import ImagePool
 
 
 def save_model(save_dir: str, name_to_module: Dict[str, torch.nn.Module], train_config: TrainConfig):
@@ -98,6 +99,9 @@ def train(train_config: TrainConfig):
     )
     num_iterations_per_epoch = len(train_dataset_a) // train_config.batch_size
 
+    image_pool_a = ImagePool(pool_size=train_config.image_pool_size, p_previous=train_config.image_pool_proba)
+    image_pool_b = ImagePool(pool_size=train_config.image_pool_size, p_previous=train_config.image_pool_proba)
+
     g_a = networks.Generator.from_image_size(in_channels=train_config.in_channels,
                                              image_size=train_config.image_size).to(device=train_config.device)
     g_b = networks.Generator.from_image_size(in_channels=train_config.in_channels,
@@ -153,10 +157,9 @@ def train(train_config: TrainConfig):
             g_b_opt.step()
 
             # train discriminators
-            # TODO: sample previously generated images
-            fake_proba_b = d_b(generated_b.detach())  # detach?
+            fake_proba_b = d_b(image_pool_b.query(generated_b.detach()))
             real_proba_b = d_b(real_b)
-            fake_proba_a = d_a(generated_a.detach())  # detach?
+            fake_proba_a = d_a(image_pool_a.query(generated_a.detach()))
             real_proba_a = d_a(real_a)
 
             d_loss = (

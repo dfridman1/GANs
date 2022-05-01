@@ -17,4 +17,5 @@ class TrainConfig:
     show_every: int = 100
     lam: float = 10  # weight of cyclic loss
     identity_lam: float = 0.5  # weight of identity loss
-    num_residual_blocks: int = 9
+    image_pool_size: int = 50
+    image_pool_proba: float = 0.5  # with this probability a 'history' image will be returned for discriminator
