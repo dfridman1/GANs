@@ -51,7 +51,7 @@ def train(train_config: TrainConfig):
     fake_images_b_to_a_writer = SummaryWriter(f"{train_config.experiment_dirpath}/fake_b->a")
     stats_writer = SummaryWriter(f"{train_config.experiment_dirpath}/stats")
 
-    resize_factor = 1.1
+    resize_factor = 1.05
     resize_size = int(round(resize_factor * train_config.image_size))
     train_dataset_a = ImageDataset(
         root=os.path.join(train_config.data_dirpath, "trainA"),
@@ -76,7 +76,7 @@ def train(train_config: TrainConfig):
     test_dataset_a = ImageDataset(
         root=os.path.join(train_config.data_dirpath, "testA"),
         transforms=transforms.Compose([
-            transforms.Resize(286),
+            transforms.Resize(resize_size),
             transforms.CenterCrop(train_config.image_size),
             transforms.ToTensor()
         ]),
@@ -85,7 +85,7 @@ def train(train_config: TrainConfig):
     test_dataset_b = ImageDataset(
         root=os.path.join(train_config.data_dirpath, "testB"),
         transforms=transforms.Compose([
-            transforms.Resize(286),
+            transforms.Resize(resize_size),
             transforms.CenterCrop(train_config.image_size),
             transforms.ToTensor()
         ]),
@@ -94,10 +94,6 @@ def train(train_config: TrainConfig):
 
     train_dataloader_a = DataLoader(
         dataset=train_dataset_a, batch_size=train_config.batch_size,
-        shuffle=True, num_workers=train_config.num_workers
-    )
-    train_dataloader_b = DataLoader(
-        dataset=train_dataset_b, batch_size=train_config.batch_size,
         shuffle=True, num_workers=train_config.num_workers
     )
     num_iterations_per_epoch = len(train_dataset_a) // train_config.batch_size
