@@ -17,3 +17,4 @@ class TrainConfig:
     show_every: int = 100
     lam: float = 10  # weight of cyclic loss
     identity_lam: float = 0.5  # weight of identity loss
+    num_residual_blocks: int = 9
