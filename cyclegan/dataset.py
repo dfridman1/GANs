@@ -9,9 +9,10 @@ from tqdm import tqdm
 
 
 class ImageDataset(Dataset):
-    def __init__(self, root: str, transforms: torchvision.transforms.Compose = None):
+    def __init__(self, root: str, transforms: torchvision.transforms.Compose = None, image_size: int = -1):
         super().__init__()
         self.transforms = transforms or torchvision.transforms.ToTensor()
+        self.image_size = image_size
 
         self.images = self._load_images(root)
 
@@ -29,6 +30,8 @@ class ImageDataset(Dataset):
         for f in tqdm(filepaths, desc="loading images"):
             image = Image.open(f)
             if self._validate(image):
+                if self.image_size > 0:
+                    image = image.resize((self.image_size, self.image_size))
                 images.append(image)
         return images
 

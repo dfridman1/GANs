@@ -40,23 +40,27 @@ def train(train_config: TrainConfig):
     fake_images_b_to_a_writer = SummaryWriter(f"{train_config.experiment_dirpath}/fake_b->a")
     stats_writer = SummaryWriter(f"{train_config.experiment_dirpath}/stats")
 
+    resize_factor = 1.1
+    resize_size = int(round(resize_factor * train_config.image_size))
     train_dataset_a = ImageDataset(
         root=os.path.join(train_config.data_dirpath, "trainA"),
         transforms=transforms.Compose([
-            transforms.Resize(286),
+            transforms.Resize(resize_size),
             transforms.RandomCrop(train_config.image_size),
             transforms.RandomHorizontalFlip(),
             transforms.ToTensor()
-        ])
+        ]),
+        image_size=train_config.image_size
     )
     train_dataset_b = ImageDataset(
         root=os.path.join(train_config.data_dirpath, "trainB"),
         transforms=transforms.Compose([
-            transforms.Resize(286),
+            transforms.Resize(resize_size),
             transforms.RandomCrop(train_config.image_size),
             transforms.RandomHorizontalFlip(),
             transforms.ToTensor()
-        ])
+        ]),
+        image_size=train_config.image_size
     )
     test_dataset_a = ImageDataset(
         root=os.path.join(train_config.data_dirpath, "testA"),
@@ -64,7 +68,8 @@ def train(train_config: TrainConfig):
             transforms.Resize(286),
             transforms.CenterCrop(train_config.image_size),
             transforms.ToTensor()
-        ])
+        ]),
+        image_size=train_config.image_size
     )
     test_dataset_b = ImageDataset(
         root=os.path.join(train_config.data_dirpath, "testB"),
@@ -72,7 +77,8 @@ def train(train_config: TrainConfig):
             transforms.Resize(286),
             transforms.CenterCrop(train_config.image_size),
             transforms.ToTensor()
-        ])
+        ]),
+        image_size=train_config.image_size
     )
 
     train_dataloader_a = DataLoader(
