@@ -1,15 +1,26 @@
 import os
 import shutil
+import json
 import torch
 import torchvision
 from torch.utils.data import DataLoader, Dataset
 from torch.utils.tensorboard import SummaryWriter
 from torchvision import transforms
 from tqdm import tqdm
+from typing import Dict
 from cyclegan.train_config import TrainConfig
 from cyclegan.helpers import sample_random_batch
 from cyclegan import networks
 from cyclegan.dataset import ImageDataset
+
+
+def save_model(save_dir: str, name_to_module: Dict[str, torch.nn.Module], train_config: TrainConfig):
+    os.makedirs(save_dir, exist_ok=True)
+    for name, module in name_to_module.items():
+        out_filepath = os.path.join(save_dir, f"{name}.pt")
+        torch.save(module.state_dict(), out_filepath)
+    with open(os.path.join(save_dir, "config.json"), "w") as fp:
+        json.dump(train_config.__dict__, fp, indent=4, sort_keys=True)
 
 
 def generate(dataset: Dataset, generator: torch.nn.Module, batch_size: int, device: torch.device, num_batches=4):
@@ -198,6 +209,13 @@ def train(train_config: TrainConfig):
                 generated_images = torch.cat([generated_images, input_images], dim=1)
                 fake_images_b_to_a_writer.add_image("fake images (A -> B)", generated_images, global_step=global_step)
             global_step += 1
+        save_model(
+            save_dir=os.path.join(train_config.experiment_dirpath, "saved_weights"),
+            name_to_module={
+                "g_a": g_a, "g_b": g_b, "d_a": d_a, "d_b": d_b
+            },
+            train_config=train_config
+        )
 
 
 def main():
