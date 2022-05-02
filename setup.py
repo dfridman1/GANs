@@ -13,6 +13,8 @@ setup(
         "tensorflow",
         "ipython",
         "tqdm",
-        "jupyter"
+        "jupyter",
+        "pandas",
+        "scikit-learn"
     ],
 )

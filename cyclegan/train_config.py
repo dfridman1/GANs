@@ -19,3 +19,4 @@ class TrainConfig:
     identity_lam: float = 0.5  # weight of identity loss
     image_pool_size: int = 50
     image_pool_proba: float = 0.5  # with this probability a 'history' image will be returned for discriminator
+    celeba_criteria_key: str = "Mustache"

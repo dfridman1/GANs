@@ -13,6 +13,7 @@ from cyclegan.helpers import sample_random_batch
 from cyclegan import networks
 from cyclegan.dataset import ImageDataset
 from cyclegan.image_pool import ImagePool
+from cyclegan.celeba_dataset import CelebaDataset
 
 
 def save_model(save_dir: str, name_to_module: Dict[str, torch.nn.Module], train_config: TrainConfig):
@@ -54,44 +55,82 @@ def train(train_config: TrainConfig):
 
     resize_factor = 1.05
     resize_size = int(round(resize_factor * train_config.image_size))
-    train_dataset_a = ImageDataset(
-        root=os.path.join(train_config.data_dirpath, "trainA"),
-        transforms=transforms.Compose([
-            transforms.Resize(resize_size),
-            transforms.RandomCrop(train_config.image_size),
-            transforms.RandomHorizontalFlip(),
-            transforms.ToTensor()
-        ]),
-        image_size=train_config.image_size
+
+    train_transforms = transforms.Compose([
+        transforms.Resize(resize_size),
+        transforms.RandomCrop(train_config.image_size),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor()
+    ])
+    test_transforms = transforms.Compose([
+        transforms.Resize(resize_size),
+        transforms.CenterCrop(train_config.image_size),
+        transforms.ToTensor()
+    ])
+
+    train_dataset_a = CelebaDataset(
+        data_dir=train_config.data_dirpath,
+        is_train=True,
+        criteria={train_config.celeba_criteria_key: 1},
+        transforms=train_transforms
     )
-    train_dataset_b = ImageDataset(
-        root=os.path.join(train_config.data_dirpath, "trainB"),
-        transforms=transforms.Compose([
-            transforms.Resize(resize_size),
-            transforms.RandomCrop(train_config.image_size),
-            transforms.RandomHorizontalFlip(),
-            transforms.ToTensor()
-        ]),
-        image_size=train_config.image_size
+    train_dataset_b = CelebaDataset(
+        data_dir=train_config.data_dirpath,
+        is_train=True,
+        criteria={train_config.celeba_criteria_key: 0},
+        transforms=train_transforms
     )
-    test_dataset_a = ImageDataset(
-        root=os.path.join(train_config.data_dirpath, "testA"),
-        transforms=transforms.Compose([
-            transforms.Resize(resize_size),
-            transforms.CenterCrop(train_config.image_size),
-            transforms.ToTensor()
-        ]),
-        image_size=train_config.image_size
+    test_dataset_a = CelebaDataset(
+        data_dir=train_config.data_dirpath,
+        is_train=False,
+        criteria={train_config.celeba_criteria_key: 1},
+        transforms=test_transforms
     )
-    test_dataset_b = ImageDataset(
-        root=os.path.join(train_config.data_dirpath, "testB"),
-        transforms=transforms.Compose([
-            transforms.Resize(resize_size),
-            transforms.CenterCrop(train_config.image_size),
-            transforms.ToTensor()
-        ]),
-        image_size=train_config.image_size
+    test_dataset_b = CelebaDataset(
+        data_dir=train_config.data_dirpath,
+        is_train=False,
+        criteria={train_config.celeba_criteria_key: 0},
+        transforms=test_transforms
     )
+
+    # train_dataset_a = ImageDataset(
+    #     root=os.path.join(train_config.data_dirpath, "trainA"),
+    #     transforms=transforms.Compose([
+    #         transforms.Resize(resize_size),
+    #         transforms.RandomCrop(train_config.image_size),
+    #         transforms.RandomHorizontalFlip(),
+    #         transforms.ToTensor()
+    #     ]),
+    #     image_size=train_config.image_size
+    # )
+    # train_dataset_b = ImageDataset(
+    #     root=os.path.join(train_config.data_dirpath, "trainB"),
+    #     transforms=transforms.Compose([
+    #         transforms.Resize(resize_size),
+    #         transforms.RandomCrop(train_config.image_size),
+    #         transforms.RandomHorizontalFlip(),
+    #         transforms.ToTensor()
+    #     ]),
+    #     image_size=train_config.image_size
+    # )
+    # test_dataset_a = ImageDataset(
+    #     root=os.path.join(train_config.data_dirpath, "testA"),
+    #     transforms=transforms.Compose([
+    #         transforms.Resize(resize_size),
+    #         transforms.CenterCrop(train_config.image_size),
+    #         transforms.ToTensor()
+    #     ]),
+    #     image_size=train_config.image_size
+    # )
+    # test_dataset_b = ImageDataset(
+    #     root=os.path.join(train_config.data_dirpath, "testB"),
+    #     transforms=transforms.Compose([
+    #         transforms.Resize(resize_size),
+    #         transforms.CenterCrop(train_config.image_size),
+    #         transforms.ToTensor()
+    #     ]),
+    #     image_size=train_config.image_size
+    # )
 
     train_dataloader_a = DataLoader(
         dataset=train_dataset_a, batch_size=train_config.batch_size,
@@ -222,7 +261,7 @@ def train(train_config: TrainConfig):
 def main():
     config = TrainConfig(
         experiment_dirpath="experiments/cyclegan-test",
-        data_dirpath="datasets/monet2photo",
+        data_dirpath="datasets/celeba",
         image_size=64
     )
     train(config)
